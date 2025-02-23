@@ -2,10 +2,11 @@ import { fontFamily } from "tailwindcss/defaultTheme";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
-	darkMode: ["class"],
-	content: ["./src/**/*.{html,js,svelte,ts}"],
-	safelist: ["dark"],
-	theme: {
+    darkMode: ["class"],
+    content: ["./src/**/*.{html,js,svelte,ts}"],
+    safelist: ["dark"],
+
+    theme: {
 		container: {
 			center: true,
 			padding: "2rem",
@@ -59,6 +60,9 @@ const config = {
 			}
 		}
 	},
+
+    plugins: []
 };
 
+/** @type {import('tailwindcss').Config} */
 export default config;

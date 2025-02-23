@@ -4,7 +4,7 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "vite dev --host",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''"
@@ -14,11 +14,7 @@
 		"@sveltejs/kit": "^2.16.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"bits-ui": "0.22.0",
-		"clsx": "^2.1.1",
 		"svelte": "^5.0.0",
-		"tailwind-merge": "^3.0.2",
-		"tailwind-variants": "^0.3.1",
-		"tailwindcss": "^3.4.17",
 		"vite": "^6.0.0"
 	},
 	"pnpm": {
@@ -27,9 +23,21 @@
 		]
 	},
 	"dependencies": {
+		"@11labs/client": "^0.0.7",
+		"@fal-ai/client": "^1.2.3",
+		"@supabase/ssr": "^0.5.2",
+		"@supabase/supabase-js": "^2.48.1",
 		"@tailwindcss/vite": "^4.0.8",
 		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"framer-motion": "^12.4.7",
 		"lucide-react": "^0.475.0",
+		"lucide-svelte": "^0.475.0",
+		"p5": "^1.11.3",
+		"supabase": "^2.12.1",
+		"tailwind-merge": "^3.0.2",
+		"tailwind-variants": "^0.3.1",
+		"tailwindcss": "^4.0.8",
 		"tailwindcss-animate": "^1.0.7"
 	}
 }
