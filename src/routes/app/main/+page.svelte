@@ -2,12 +2,13 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { name } from "$lib/constants";
+  import { goto } from "$app/navigation";
 
   let { data } = $props();
   let { supabase } = $derived(data);
   let user = $state(0);
   let users = $state([{
-    id: 1,
+    id: "hg1nXWYvV4OMLu8PECu6",
     name: "Helen",
     age: 26,
     job: "Software Engineer",
@@ -16,7 +17,7 @@
       "https://cdn.pixabay.com/photo/2020/02/01/03/00/girl-4809434_1280.jpg",
     ],
   }, {
-    id: 2,
+    id: "hg1nXWYvV4OMLu8PECu6",
     name: "Linda",
     age: 30,
     job: "Data Scientist",
@@ -24,6 +25,10 @@
       "https://cdn.pixabay.com/photo/2020/03/23/13/19/fashion-4960850_1280.jpg"
     ]
   }]);
+
+  function navigate(page) {
+    goto(page);
+  }
 
   // on double tap move to next user
   async function handleDoubleTap() {
@@ -54,8 +59,12 @@
             <h4>{users[user].age}</h4>
             <p>{users[user].job}</p>
           </div>
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <!-- svelte-ignore event_directive_deprecated -->
           <div
-            class="size-10 rounded-full bg-radial-[at_50%_75%] from-sky-200 via-blue-400 to-indigo-900 to-90% absolute top-2 right-2 animate-gradient"
+            on:click={() => {navigate(`/app/main/agent_chat/${users[user].id}/${users[user].name}`)}}
+            class="size-10 rounded-full bg-radial-[at_50%_75%] from-sky-200 via-blue-400 to-indigo-900 to-90% absolute top-2 right-2 animate-gradient cursor-pointer"
           ></div>
         {/if}
       </Card.Content>

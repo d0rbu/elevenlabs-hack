@@ -1,1 +1,1 @@
-<p>Login error</p>
+<p>Auth error :(</p>

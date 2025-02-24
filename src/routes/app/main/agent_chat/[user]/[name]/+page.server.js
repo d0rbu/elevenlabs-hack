@@ -7,9 +7,10 @@ export async function load({ params, locals: { safeGetSession } }) {
     return error(401, 'Unauthorized');
   }
 
-  const { user: agentId } = params;
+  const { user: agentId, name } = params;
 
   return {
-    agentId
+    agentId,
+    name
   }
 }

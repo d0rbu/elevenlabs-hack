@@ -6,18 +6,23 @@
   import ImageUp from "lucide-svelte/icons/image-up";
 
   import { Button } from "$lib/components/ui/button";
+  import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
   import * as Card from "$lib/components/ui/card";
   import Orb from "@/components/orb.svelte";
   import { onMount } from "svelte";
   import { on } from "svelte/events";
   import { image } from "framer-motion/client";
+    import { redirect } from "@sveltejs/kit";
 
   let { data } = $props();
-  let { supabase } = $derived(data);
+  let { supabase, session } = $derived(data);
 
   const STATE = {
     SPLASH: "splash",
     ONBOARDING: "onboarding",
+    SIGNING_UP: "signing_up",
+    AWAITING_CONFIRMATION: "awaiting_confirmation",
     ERROR: "error",
   };
   let state = $state(STATE.SPLASH);
@@ -32,9 +37,15 @@
   let splashFunctionalityClasses = $derived(inSplash ? "cursor-pointer" : "");
   let inOnboarding = $derived(state === STATE.ONBOARDING);
   let onboardingVisibilityClasses = $derived(
-    state === STATE.ONBOARDING
-      ? "opacity-100 scale-150"
-      : "opacity-0 pointer-events-none",
+    inOnboarding ? "opacity-100 scale-150" : "opacity-0 pointer-events-none",
+  );
+  let inSigningUp = $derived(state === STATE.SIGNING_UP);
+  let signingUpVisibilityClasses = $derived(
+    inSigningUp ? "opacity-100" : "opacity-0 pointer-events-none",
+  );
+  let inAwaitingConfirmation = $derived(state === STATE.AWAITING_CONFIRMATION);
+  let awaitingConfirmationVisibilityClasses = $derived(
+    inAwaitingConfirmation ? "opacity-100" : "opacity-0 pointer-events-none",
   );
 
   const IMAGE_UPLOAD_STATE = {
@@ -64,16 +75,31 @@
   let latestImageAnalysisResolve = $state(null);
   let orbSize = $derived(Math.max(startButtonWidth, startButtonHeight) * 1.03);
 
+  let localAudioStream = $state([]);
+  let uploadedImages = $state([]);
+
+  $effect(() => {
+    // no auth :(
+    if (inSigningUp || inAwaitingConfirmation) {
+      redirect("/app/main");
+    }
+  });
+
   $effect(async () => {
     if (inOnboarding && !userId) {
-      const { data, error } = await supabase.auth.signInAnonymously();
-      if (error) {
-        console.error("Error signing in:", error);
-        state = STATE.SPLASH;
-        return;
-      }
+      const currentUserId = session?.user?.id;
+      if (currentUserId) {
+        userId = currentUserId;
+      } else {
+        const { data, error } = await supabase.auth.signInAnonymously();
+        if (error) {
+          console.error("Error signing in:", error);
+          state = STATE.SPLASH;
+          return;
+        }
 
-      userId = data?.user?.id;
+        userId = data?.user?.id;
+      }
 
       if (!userId) {
         console.error("No user ID found");
@@ -83,6 +109,8 @@
 
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
+      let mediaRecorder = null;
+
       conversation = await Conversation.startSession({
         agentId: PUBLIC_ONBOARDING_AGENT_ID,
         onConnect: () => {
@@ -91,7 +119,23 @@
         },
         onDisconnect: () => {
           connected = false;
-          // TODO: use the conversation id to extract the data collected during the conversation from the api
+
+          if (mediaRecorder) {
+            mediaRecorder.stop();
+          }
+
+          const conversationId = conversation.getId();
+          // hit the createAgent sveltekit action under this route
+          const form = new FormData();
+          form.append("id", conversationId);
+          form.append("audio", localAudioStream);
+          form.append("images", JSON.stringify(images));
+          fetch("?/createAgent", {
+            method: "POST",
+            body: form,
+          });
+
+          state = STATE.SIGNING_UP;
           console.log("Disconnected");
         },
         onError: () => {
@@ -124,6 +168,13 @@
           agent_name: agentName,
         },
       });
+
+      // listen in on the input stream and start recording to the local audio stream
+      mediaRecorder = new MediaRecorder(conversation.input.inputStream);
+      mediaRecorder.ondataavailable = (e) => {
+        localAudioStream = e.data;
+      };
+      mediaRecorder.start();
     } else if (!inOnboarding && conversation) {
       await conversation.endSession();
     }
@@ -131,10 +182,11 @@
 
   const uploadImage = async (file) => {
     try {
-      // we gotta make this public temporarily so fal.ai can analyze it, but that's not good! lets hash for an ounce of privacy
       const { data, error } = await supabase.storage
         .from("user_photos")
-        .upload(`${userId}/${file.name}`, file);
+        .upload(`${userId}/${file.name}`, file, {
+          upsert: true,
+        });
 
       if (error) {
         console.error("Upload failed:", error.message);
@@ -180,7 +232,7 @@
 
   const onImageSelect = async (e) => {
     imageUploadState = IMAGE_UPLOAD_STATE.UPLOADING;
-    const uploadedImages = await Promise.all(
+    uploadedImages = await Promise.all(
       Array.from(e.target.files).map(uploadImage),
     );
     console.log("uploadedImages", uploadedImages);
@@ -222,18 +274,33 @@
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div id="middle-section" class="flex flex-col items-center justify-center">
-    <form method="POST" action="?/login">
-      <label>
-        Email
-        <input name="email" type="email" />
-      </label>
-      <label>
-        Password
-        <input name="password" type="password" />
-      </label>
-      <button>Login</button>
-      <button formaction="?/signup">Sign up</button>
-    </form>
+    <Card.Root
+      class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 w-3/4 font-sans overflow-hidden {awaitingConfirmationVisibilityClasses}"
+    >
+      <Card.Content>
+        {#if inAwaitingConfirmation}
+          <p>
+            {text("Please check your email for a confirmation link!")}
+          </p>
+        {:else}
+          <form method="POST" action="?/signup" class="space-y-4">
+            <Input
+              name="email"
+              type="email"
+              id="email"
+              placeholder={text("email@domain.com")}
+              class="w-full"
+              required
+            />
+            <Button type="submit" size="lg" class="w-full cursor-pointer" onclick={() => {
+              state = STATE.AWAITING_CONFIRMATION;
+            }}>
+              {text("Sign up")}
+            </Button>
+          </form>
+        {/if}
+      </Card.Content>
+    </Card.Root>
 
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div
@@ -289,12 +356,13 @@
       onchange={(e) => onImageSelect(e)}
     />
   </div>
-</div>
 
-<div
-  id="bottom-section"
-  class="flex flex-col items-center justify-center splash"
-></div>
+  <div
+    id="bottom-section"
+    class="flex flex-col items-center justify-center splash bg-red"
+  >
+  </div>
+</div>
 
 <style>
   @keyframes flicker {

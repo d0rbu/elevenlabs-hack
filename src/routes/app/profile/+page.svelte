@@ -6,11 +6,11 @@
   let user = $state({
     id: 1,
     name: "Haroon",
-    age: 26,
-    job: "Software Engineer",
+    age: 22,
+    job: "Student",
     imgs: [
-      "https://cdn.pixabay.com/photo/2020/02/01/03/00/girl-4809433_1280.jpg",
-      "https://cdn.pixabay.com/photo/2020/02/01/03/00/girl-4809434_1280.jpg",
+      "https://media.licdn.com/dms/image/v2/D4E03AQGHnnj617ckTQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1730003015546?e=2147483647&v=beta&t=66YRRl1GaahLNoRtWaYBxSS4g6hM5_YYvHkwrEyaBBA",
+      "https://pbs.twimg.com/media/FSLeHgvXMAMPNQT.jpg:large",
     ],
   });
 </script>
