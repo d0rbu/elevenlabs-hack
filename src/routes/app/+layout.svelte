@@ -35,7 +35,7 @@
   <slot />
 
   <div
-    class="footer bottom-0 absolute flex w-full justify-around bg-gray-200 border-t border-gray-200 p-2"
+    class="footer bottom-0 fixed flex w-[484] justify-around bg-gray-200 border-t border-gray-200 p-2"
   >
     <a
       class="icon"

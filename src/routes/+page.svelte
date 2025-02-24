@@ -13,7 +13,7 @@
   import { onMount } from "svelte";
   import { on } from "svelte/events";
   import { image } from "framer-motion/client";
-    import { redirect } from "@sveltejs/kit";
+  import { goto } from "$app/navigation";
 
   let { data } = $props();
   let { supabase, session } = $derived(data);
@@ -81,7 +81,8 @@
   $effect(() => {
     // no auth :(
     if (inSigningUp || inAwaitingConfirmation) {
-      redirect("/app/main");
+      // goto("/auth/signup");
+      goto("/app/main");
     }
   });
 
@@ -130,6 +131,7 @@
           form.append("id", conversationId);
           form.append("audio", localAudioStream);
           form.append("images", JSON.stringify(images));
+
           fetch("?/createAgent", {
             method: "POST",
             body: form,
@@ -172,6 +174,9 @@
       // listen in on the input stream and start recording to the local audio stream
       mediaRecorder = new MediaRecorder(conversation.input.inputStream);
       mediaRecorder.ondataavailable = (e) => {
+        console.log("data available");
+        console.log(e.data);
+        console.log(localAudioStream);
         localAudioStream = e.data;
       };
       mediaRecorder.start();
@@ -354,6 +359,7 @@
       accept=".jpg, .jpeg, .png"
       bind:this={imageUpload}
       onchange={(e) => onImageSelect(e)}
+      multiple
     />
   </div>
 

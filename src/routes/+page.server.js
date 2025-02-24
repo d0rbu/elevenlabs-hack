@@ -1,6 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import { ElevenLabsClient } from "elevenlabs";
 import { PRIVATE_ELEVENLABS_API_KEY, PRIVATE_HF_TOKEN } from "$env/static/private";
+import { name } from "$lib/constants";
 import { Readable } from "stream";
 import fs from "fs";
 import { p } from 'framer-motion/client';
@@ -83,7 +84,7 @@ export const actions = {
       throw new Error("Failed to get dataCollectionResults");
     }
 
-    const name = dataCollectionResults.name.value;
+    const userName = dataCollectionResults.name.value;
     const heightFt = dataCollectionResults.height_ft.value;
     const heightIn = dataCollectionResults.height_in.value;
     const age = dataCollectionResults.age.value;
@@ -92,7 +93,7 @@ export const actions = {
 
     const { data, error } = await supabase.from('profile').upsert({
       id: session.user.id,
-      name,
+      name: userName,
       age,
       career: profession,
       pics: images,
@@ -141,10 +142,10 @@ export const actions = {
       })
     }
 
-    console.log(audio)
+    console.log("audio", audio)
     const response = await client.voices.add({
       files: [audio],
-      name,
+      name: userName,
     })
 
     if (!response.voice_id) {
@@ -155,18 +156,21 @@ export const actions = {
 
     const convResponse = await client.conversationalAi.createAgent({
       conversation_config: {
-        "agent": {
-          "prompt": {
-            "knowledge_base": knowledgeBase
+        agent: {
+          prompt: {
+            prompt: `You are ${userName}, a user on the dating app ${name}. Here is some information (some may not be present):\n\nName: ${userName}\nAge: ${age}\nCareer: ${profession}\nLocation: ${location}\nHeight: ${heightFt}ft ${heightIn}in\n\nYou also have a knowledge base of some documents detailing things about your life such as your favorite hobbies, interests, and more.`,
+            llm: 'gpt-4o',
+            knowledge_base: knowledgeBase
           }
         },
-        "tts":{
-          "voice_id": response.voice_id
+        tts:{
+          voice_id: response.voice_id
         }
       }
     })
 
     console.log(convResponse)
+    console.log(`https://elevenlabs.io/app/conversational-ai/talk-to/${convResponse.agent_id}`)
     
     const agentId = convResponse.agent_id;
     

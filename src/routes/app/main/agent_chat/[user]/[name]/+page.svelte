@@ -79,8 +79,11 @@
       conversation={conversation}
       connected={connected}
       mode={conversationMode}
+      primary={userName == "Helen" ? "#a12e31" : "#a17c31"}
+      secondary={userName == "Helen" ? "#f63b3b" : "#f6b83b"}
+      bg={userName == "Helen" ? "#fd9393" : "#fdd793"}
       fps={30}
     />
-    <h1 class="text-center text-2xl mt-20 text-semibold mb-20">Helen</h1>
+    <h1 class="text-center text-2xl mt-20 text-semibold mb-20">{userName}</h1>
   </div>
   

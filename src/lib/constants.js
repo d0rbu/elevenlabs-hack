@@ -1,7 +1,7 @@
 import { text } from "$lib/flags";
 
 const AGENT_NAME = "Gwen";
-const NAME = "AI dating";
+const NAME = "Speakeasy";
 const TAGLINE = "Dating reimagined";
 
 export const agentName = text(AGENT_NAME);
